@@ -1,22 +1,48 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Overview } from "./components/overview";
-import { RecentTransactions } from "./components/recent-transaction";
+"use client";
 
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { Skeleton } from "@/components/ui/skeleton";
+import { RecentTransactions } from "./components/recent-transaction";
+import { Overview } from "./components/overview";
+import { Balance } from "@/types/ticker";
+import { fetchBalance } from "./service/indodax/get-user-balance";
 
 export function DashboardMain() {
+  const {
+    data: balance,
+    isLoading,
+    isError,
+  } = useQuery<Balance, Error>({
+    queryKey: ["balance"],
+    queryFn: fetchBalance,
+    refetchInterval: 60000,
+  });
+
   return (
     <main className="flex-1 overflow-y-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total IDR Balance
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12,345.67</div>
-            <p className="text-xs text-muted-foreground">
-              +2.5% from last month
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-[100px]" />
+            ) : isError ? (
+              <div className="text-2xl font-bold text-red-500">
+                Error fetching balance
+              </div>
+            ) : (
+              <div className="text-2xl font-bold">Rp. {balance?.idr || 0}</div>
+            )}
+            {/* <p className="text-xs text-muted-foreground">
+              Across all currencies
+            </p> */}
           </CardContent>
         </Card>
         <Card>
