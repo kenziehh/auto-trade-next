@@ -1,31 +1,56 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { Skeleton } from "@/components/ui/skeleton";
 import { RecentTransactions } from "./components/recent-transaction";
 import { Overview } from "./components/overview";
 import { Balance } from "@/types/ticker";
-import { fetchBalance } from "./service/indodax/get-user-balance";
+import { getUserBalance } from "./service/indodax/get-user-balance";
+import { History } from "@/types/history";
+import { getTradeHistory } from "./service/indodax/get-trade-history";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Pair } from "@/types/pair";
+import { getAllPairs } from "./service/indodax/get-all-pairs";
 
 export function DashboardMain() {
+  const [selectedPair, setSelectedPair] = useState("btc_idr");
+
   const {
     data: balance,
     isLoading,
     isError,
   } = useQuery<Balance, Error>({
     queryKey: ["balance"],
-    queryFn: fetchBalance,
-    refetchInterval: 60000,
+    queryFn: getUserBalance,
   });
 
+  const { data: histories, isLoading: isHistoryLoading } = useQuery<
+    History[],
+    Error
+  >({
+    queryKey: ["history", selectedPair],
+    queryFn: () => getTradeHistory(selectedPair),
+    enabled: !!selectedPair,
+  });
+
+  const { data: pairs, isLoading: isPairsLoading } = useQuery<Pair[], Error>({
+    queryKey: ["pairs", selectedPair],
+    queryFn: getAllPairs,
+  });
   return (
     <main className="flex-1 overflow-y-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader>
             <CardTitle className="text-sm font-medium">
               Total IDR Balance
             </CardTitle>
@@ -40,13 +65,10 @@ export function DashboardMain() {
             ) : (
               <div className="text-2xl font-bold">Rp. {balance?.idr || 0}</div>
             )}
-            {/* <p className="text-xs text-muted-foreground">
-              Across all currencies
-            </p> */}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader>
             <CardTitle className="text-sm font-medium">Active Trades</CardTitle>
           </CardHeader>
           <CardContent>
@@ -55,7 +77,7 @@ export function DashboardMain() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader>
             <CardTitle className="text-sm font-medium">Profit/Loss</CardTitle>
           </CardHeader>
           <CardContent>
@@ -64,7 +86,7 @@ export function DashboardMain() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader>
             <CardTitle className="text-sm font-medium">
               Trading Volume
             </CardTitle>
@@ -75,6 +97,23 @@ export function DashboardMain() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="flex justify-between items-center mt-6">
+        <h2 className="text-xl font-bold">Recent Transactions</h2>
+        <Select onValueChange={setSelectedPair} defaultValue={"btc_idr"}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select pair" />
+          </SelectTrigger>
+          <SelectContent>
+            {pairs?.map((pair: Pair) => (
+              <SelectItem value={pair.ticker_id} key={pair.id}>
+                {pair.symbol}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4">
         <Card className="col-span-4">
           <CardHeader>
@@ -89,7 +128,10 @@ export function DashboardMain() {
             <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent>
-            <RecentTransactions />
+            <RecentTransactions
+              histories={histories ?? []}
+              isLoading={isHistoryLoading}
+            />
           </CardContent>
         </Card>
       </div>
