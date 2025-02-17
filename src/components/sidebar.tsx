@@ -21,7 +21,7 @@ export function Sidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="/">
+              <a href="/dashboard">
                 <Home className="w-4 h-4 mr-2" />
                 <span>Dashboard</span>
               </a>
@@ -29,9 +29,9 @@ export function Sidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="/analytics">
+              <a href="/dashboard/auto-trade">
                 <BarChart2 className="w-4 h-4 mr-2" />
-                <span>Analytics</span>
+                <span>Auto Trade</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

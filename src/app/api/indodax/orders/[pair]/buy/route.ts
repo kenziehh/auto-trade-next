@@ -7,7 +7,7 @@ import { createSignature } from "@/lib/signature";
 import axios from "axios";
 import { NextResponse } from "next/server";
 
-export async function GET(
+export async function POST(
   req: Request,
   { params }: { params: { pair: string } }
 ) {
@@ -15,10 +15,9 @@ export async function GET(
     if (!INDODAX_API_KEY || !INDODAX_API_SECRET) {
       throw new Error("API key or secret key not found");
     }
-
+    const { price, amount } = await req.json();
     const nonce = Date.now();
-    const body = await `method=tradeHistory&pair=${params.pair}&nonce=${nonce}`;
-
+    const body = `method=trade&nonce=${nonce}&pair=${params.pair}&type=buy&price=${price}&idr=${amount}`;
     const signature = await createSignature(INDODAX_API_SECRET, body);
 
     const response = await axios.post(INDODAX_BASE_TRADE_API_URL, body, {
